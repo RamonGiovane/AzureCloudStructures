@@ -22,9 +22,14 @@ namespace Rgd.AzureAbstractions.Tests
                 //Using literal conntection string
                 //AzureTable<EntityExample> table = new AzureTable<EntityExample>("sampletable", "my_connection_string", null);
 
+                //Creating "sampletable". Loading it if already exists.
+                table.CreateOrLoadStructure(); 
+
+                //Inserting 200 random items
                 for (int i = 0; i <= 200; i++)
                     table.Insert(new EntityExample("partitionkey", i.ToString(), 10));
 
+                //Uploading table modifications to the cloud
                 await table.CommitAsync();
                 
             }

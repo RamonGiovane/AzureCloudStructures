@@ -7,7 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 /// <summary>
-///     2020 - Version 1.2 
+///     2020 - Version 1.3 
 ///     Developed by: Ramon Giovane Dias
 /// </summary>
 namespace Rgd.AzureAbstractions.CloudStructures
@@ -37,20 +37,14 @@ namespace Rgd.AzureAbstractions.CloudStructures
         public AzureTable(string tableName) : this(tableName, log: null) { }
 
         
-        public AzureTable(string tableName, ILogger log) : base(tableName, log)
-        {
-            CreateOrLoadStructure();
-        }
+        public AzureTable(string tableName, ILogger log) : base(tableName, log){ }
 
         public AzureTable(string tableName, string storageConnectionString)
             : this(tableName, storageConnectionString, log: null) { }
 
 
         public AzureTable(string tableName, string storageConnectionString, ILogger log)
-            : base(tableName, storageConnectionString, log)
-        {
-            CreateOrLoadStructure();
-        }
+            : base(tableName, storageConnectionString, log) { }
 
         public override bool IsCreated()
         {
@@ -134,12 +128,11 @@ namespace Rgd.AzureAbstractions.CloudStructures
         /// <returns></returns>
         public override bool CreateOrLoadStructure()
         {
-            _table = storageAccount.CreateCloudTableClient().GetTableReference(StructureName);
 
             if (!IsCreated())
             {
 
-                if (Task.Run(() => _table.CreateIfNotExistsAsync()).Result) return false;
+                Task.Run(() => _table.CreateIfNotExistsAsync().Result);
 
                 _IsCreated = IsCreated();
 
@@ -154,6 +147,7 @@ namespace Rgd.AzureAbstractions.CloudStructures
 
 
         }
+
 
         public override bool DeleteStructure()
         {
