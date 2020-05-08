@@ -7,7 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 /// <summary>
-///     2020 - Version 1.3 
+///     2020 - Version 1.3.1 
 ///     Developed by: Ramon Giovane Dias
 /// </summary>
 namespace Rgd.AzureAbstractions.CloudStructures
@@ -128,6 +128,7 @@ namespace Rgd.AzureAbstractions.CloudStructures
         /// <returns></returns>
         public override bool CreateOrLoadStructure()
         {
+            _table = storageAccount.CreateCloudTableClient().GetTableReference(StructureName);
 
             if (!IsCreated())
             {
