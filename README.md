@@ -9,7 +9,7 @@
  
  
 # Example
-Only 3 lines of code for inserting a blob to the storage:
+Only 3 lines of code for sending a blob to the storage:
 
 <img src="https://github.com/RamonGiovane/AzureCloudStructures/blob/master/example1.png?raw=true">
 
