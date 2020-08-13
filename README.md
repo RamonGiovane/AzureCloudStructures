@@ -1,4 +1,4 @@
-# AzureCloudStructures
+# Azure Cloud Structures
  Abstraction classes to make easier the management of the Azure cloud tables, queues and blobs (uses .Net Core 2.0).
  
  The purpose here is to use less lines of code to do simple things, such as:
