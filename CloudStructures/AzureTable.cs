@@ -2,11 +2,14 @@
 
 using Microsoft.Azure.Cosmos.Table;
 using Microsoft.Extensions.Logging;
-using Rgd.AzureAbstractions.CloudStructures;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+/// <summary>
+///     2020 - Version 1.4.0 
+///     Developed by: Ramon Giovane Dias
+/// </summary>
 namespace Rgd.AzureAbstractions.CloudStructures
 {
     /// <summary>

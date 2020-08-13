@@ -9,8 +9,8 @@ namespace Rgd.AzureAbstractions.Tests
     {
         static void Main(string[] args)
         {
-            
-           new Tester().UsingAzureTable().GetAwaiter().GetResult();
+
+            new Tester().UsingAzureTable().GetAwaiter().GetResult();
 
         }
 
@@ -18,14 +18,17 @@ namespace Rgd.AzureAbstractions.Tests
         {
             public async Task UsingAzureTable()
             {
-                //Using environment variable
+                //Using the environment variable 'AzureWebJobsStorage' for storage authentication
                 AzureTable<EntityExample> table = new AzureTable<EntityExample>(tableName: "sampletable", log: null);
 
-                //Using literal conntection string
+                //Using literal connection string for authentication
                 //AzureTable<EntityExample> table = new AzureTable<EntityExample>("sampletable", "my_connection_string", null);
 
                 //Creating "sampletable". Loading it if already exists.
-                table.CreateOrLoadStructure(); 
+                table.CreateOrLoadStructure();
+
+                //Set this true to deactivate inner logs.
+                table.LoggingDisabled = false;
 
                 //Inserting 200 random items
                 for (int i = 0; i <= 200; i++)

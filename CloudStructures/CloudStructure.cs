@@ -1,8 +1,9 @@
 ﻿
+using Azure;
 using Microsoft.Extensions.Logging;
-using Microsoft.WindowsAzure.Storage;
 using Rgd.AzureAbstractions.Logging;
 using System;
+using System.Text;
 using System.Threading.Tasks;
 
 /// <summary>
@@ -10,7 +11,7 @@ using System.Threading.Tasks;
 ///     Developed by: Ramon Giovane Dias
 /// </summary>
 namespace Rgd.AzureAbstractions.CloudStructures
-{{
+{
     
     /// <summary>
     ///  Manipulates a cloud structure from the Azure storage. eg. Azure blob containers, Azure Tables, Azure Queues.
@@ -101,4 +102,3 @@ namespace Rgd.AzureAbstractions.CloudStructures
     }
 }
 
-}
