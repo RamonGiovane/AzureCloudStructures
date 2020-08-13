@@ -1,14 +1,12 @@
 ﻿
+
+using Microsoft.Azure.Cosmos.Table;
 using Microsoft.Extensions.Logging;
-using Microsoft.WindowsAzure.Storage.Table;
+using Rgd.AzureAbstractions.CloudStructures;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-/// <summary>
-///     2020 - Version 1.3.1 
-///     Developed by: Ramon Giovane Dias
-/// </summary>
 namespace Rgd.AzureAbstractions.CloudStructures
 {
     /// <summary>
@@ -19,9 +17,10 @@ namespace Rgd.AzureAbstractions.CloudStructures
     ///  the Azure's interface to define the corresponding row and partition key of a table entry.
     /// </summary>
     public class AzureTable<TEntity> : CloudStructure
-        where TEntity : ITableEntity, new()
+            where TEntity : ITableEntity, new()
 
     {
+
 
         private CloudTable _table;
 
@@ -33,17 +32,18 @@ namespace Rgd.AzureAbstractions.CloudStructures
 
         public static readonly int OPERATIONS_LIMIT = 100;
 
+        public static Object _lock = new Object();
+
+        private readonly CloudStorageAccount _storageAccount;
+
         public AzureTable(string tableName) : this(tableName, log: null) { }
 
-        
-        public AzureTable(string tableName, ILogger log) : base(tableName, log){ }
 
-        public AzureTable(string tableName, string storageConnectionString)
-            : this(tableName, storageConnectionString, log: null) { }
+        public AzureTable(string tableName, ILogger log) : base(tableName, log)
+        {
+            _storageAccount = CloudStorageAccount.Parse(ConnectionString);
+        }
 
-
-        public AzureTable(string tableName, string storageConnectionString, ILogger log)
-            : base(tableName, storageConnectionString, log) { }
 
         public override bool IsCreated()
         {
@@ -62,24 +62,43 @@ namespace Rgd.AzureAbstractions.CloudStructures
         /// <param name="entity"></param>
         public void Insert(TEntity entity)
         {
-            if (_batch == null) 
+            if (_batch == null)
                 _batch = new TableBatchOperation();
-            
+
+            AddOperation(_batch.InsertOrReplace, entity);
+
+        }
+
+        public void Delete(TEntity entity)
+        {
+            if (_batch == null)
+                _batch = new TableBatchOperation();
+
+            if (string.IsNullOrWhiteSpace(entity.ETag))
+                entity.ETag = "*"; //this can't be null for delete ops.
+
+            AddOperation(_batch.Delete, entity);
+        }
+
+        private void AddOperation(Action<ITableEntity> action, TEntity input)
+        {
 
             //If the batch operation has more than the instructions limit, then the batch will be saved in a queue
-            else if(_batch.Count == OPERATIONS_LIMIT)
+            if (_batch.Count == OPERATIONS_LIMIT)
             {
                 TryLog($"Warning: {StructureName} now contains more than {OPERATIONS_LIMIT} operations (recommended limit) to be commited in a single batch.");
 
-                if(_batchQueue == null)
+                if (_batchQueue == null)
                     _batchQueue = new Queue<TableBatchOperation>();
 
                 _batchQueue.Enqueue(_batch);
-               
+
                 _batch = new TableBatchOperation();
             }
 
-            _batch.InsertOrReplace(entity);
+
+            action.Invoke(input);
+
 
         }
 
@@ -89,16 +108,19 @@ namespace Rgd.AzureAbstractions.CloudStructures
         /// <returns></returns>
         public async Task CommitAsync()
         {
-            
-            while (true)
+
+
+            while (_batch != null)
             {
                 await CommitAsync(_batch);
 
                 if (_batchQueue == null || _batchQueue.Count == 0)
                     break;
-                
+
                 _batch = _batchQueue.Dequeue();
+
             }
+
 
         }
 
@@ -107,17 +129,24 @@ namespace Rgd.AzureAbstractions.CloudStructures
             TryLog(StructureName + " Batch count: " + batch.Count);
             if (batch.Count == 0) return;
 
-            
+
             else
             {
-                await _table.ExecuteBatchAsync(batch);
-                TryLog("Batch executed in " + StructureName);
+                try
+                {
+                    await _table.ExecuteBatchAsync(batch);
+                    TryLog("Batch executed in " + StructureName);
+
+                }
+                catch (StorageException e)
+                {
+                    throw new
+                        InvalidOperationException($"Storage Exception ({e.RequestInformation.HttpStatusCode})\n{e.Message}\n{e.RequestInformation.HttpStatusMessage}");
+                }
             }
 
             batch.Clear();
         }
-
-
 
 
         /// <summary>
@@ -127,7 +156,9 @@ namespace Rgd.AzureAbstractions.CloudStructures
         /// <returns></returns>
         public override bool CreateOrLoadStructure()
         {
-            _table = storageAccount.CreateCloudTableClient().GetTableReference(StructureName);
+
+            var tableClient = _storageAccount.CreateCloudTableClient(new TableClientConfiguration());
+            _table = tableClient.GetTableReference(StructureName);
 
             if (!IsCreated())
             {
@@ -148,7 +179,6 @@ namespace Rgd.AzureAbstractions.CloudStructures
 
         }
 
-
         public override bool DeleteStructure()
         {
             return _table != null && Task.Run(() => _table.DeleteIfExistsAsync()).Result;
@@ -164,7 +194,7 @@ namespace Rgd.AzureAbstractions.CloudStructures
 
             var query = new TableQuery<TEntity>().Where(condition);
 
-            // Print the fields for each customer.
+
             TableContinuationToken token = null;
 
             TableQuerySegment<TEntity> resultSegment;
@@ -195,15 +225,17 @@ namespace Rgd.AzureAbstractions.CloudStructures
 
         public async Task<TEntity> Retrieve(string partitionKey, string rowKey)
         {
+            if (string.IsNullOrWhiteSpace(partitionKey) || string.IsNullOrWhiteSpace(partitionKey))
+                return default;
 
             // Create a retrieve operation that expects a customer entity.
             TableOperation retrieveOperation =
-                TableOperation.Retrieve<TEntity>(partitionKey ?? "", rowKey ?? "");
+                TableOperation.Retrieve<TEntity>(partitionKey, rowKey);
 
             // Execute the operation.
             TableResult retrievedResult = await _table.ExecuteAsync(retrieveOperation);
 
-            // Assign the result to a AssignorInvoice object.
+            // Assign the result to a TEntity object.
             return retrievedResult == null ? default : (TEntity)retrievedResult.Result;
         }
 
@@ -212,23 +244,6 @@ namespace Rgd.AzureAbstractions.CloudStructures
             return Retrieve(invoice.PartitionKey, invoice.RowKey);
         }
 
-        public async void Delete(TEntity entity)
-        {
-
-            // Create the Delete TableOperation and then execute it.
-            if (entity != null)
-            {
-                TableOperation deleteOperation = TableOperation.Delete(entity);
-
-                // Execute the operation.
-                await _table.ExecuteAsync(deleteOperation);
-
-                TryLog("Entity deleted from " + StructureName + " with RK: " + entity.RowKey);
-            }
-
-            else
-                TryLogError("Cannot delete a null entity from " + StructureName);
-        }
 
     }
 }

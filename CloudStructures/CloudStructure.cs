@@ -3,13 +3,15 @@ using Microsoft.Extensions.Logging;
 using Microsoft.WindowsAzure.Storage;
 using Rgd.AzureAbstractions.Logging;
 using System;
+using System.Threading.Tasks;
 
 /// <summary>
-///     2020 - Version 1.2 
+///     2020 - Version 1.4.0 
 ///     Developed by: Ramon Giovane Dias
 /// </summary>
 namespace Rgd.AzureAbstractions.CloudStructures
-{
+{{
+    
     /// <summary>
     ///  Manipulates a cloud structure from the Azure storage. eg. Azure blob containers, Azure Tables, Azure Queues.
     ///  An instance of this class can only handle one strucutre, which must be specified by it's name on the constructor.
@@ -20,14 +22,11 @@ namespace Rgd.AzureAbstractions.CloudStructures
     public abstract class CloudStructure : AbstractLogger
     {
         public readonly string StructureName;
+        protected readonly string ConnectionString;
+        // protected readonly CloudStorageAccount storageAccount;
 
-        protected readonly CloudStorageAccount storageAccount;
-        
         /// <summary>
         ///     Instantiates a new cloud structure. 
-        ///     The environment variable "AzureWebJobsStorage" must be set with the cloud storage account connection string
-        ///     in order to give this class access to the Azure Storage.
-        ///     Otherwise, an access denied exception will be thrown.
         /// </summary>
         /// <param name="structureName"></param>
         /// <param name="logger"></param>
@@ -36,45 +35,30 @@ namespace Rgd.AzureAbstractions.CloudStructures
 
         /// <summary>
         ///     Instantiates a new cloud structure. 
-        ///     The environment variable "AzureWebJobsStorage" must be set with the cloud storage account connection string
-        ///     in order to give this class access to the Azure Storage.
-        ///     Otherwise, an access denied exception will be thrown.
         /// </summary>
         /// <param name="structureName"></param>
         /// <param name="logger"></param>
         public CloudStructure(string structureName, ILogger logger) : base(logger)
         {
 
-            storageAccount = CloudStorageAccount.Parse(Environment.GetEnvironmentVariable("AzureWebJobsStorage"));
+            ConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
 
             StructureName = structureName;
         }
 
         /// <summary>
         ///     Instantiates a new cloud structure. 
-        ///     The cloud storage account connection string must be passed
-        ///     in order to give this class access to the Azure Storage.
-        ///     An invalid key will result in an access denied exception.
         /// </summary>
         /// <param name="structureName"></param>
         /// <param name="logger"></param>
-        public CloudStructure(string structureName, string storageConnectionString) 
-            : this(structureName: structureName, storageConnectionString: storageConnectionString, logger: null) { }
-
-        /// <summary>
-        ///     Instantiates a new cloud structure. 
-        ///     The cloud storage account connection string must be passed
-        ///     in order to give this class access to the Azure Storage.
-        ///     An invalid key will result in an access denied exception.
-        /// </summary>
-        /// <param name="structureName"></param>
-        /// <param name="logger"></param>
-        public CloudStructure(string structureName, string storageConnectionString, ILogger logger) : base(logger)
+        public CloudStructure(string structureName, string connectionString, ILogger logger) : base(logger)
         {
-            storageAccount = CloudStorageAccount.Parse(storageConnectionString);
+
+            ConnectionString = connectionString;
 
             StructureName = structureName;
         }
+
 
         /// <summary>
         ///     Checks if the structure is created.
@@ -95,5 +79,26 @@ namespace Rgd.AzureAbstractions.CloudStructures
         public abstract bool DeleteStructure();
 
 
+        protected bool LogAzureResponse(string operation, Response response)
+        {
+            string log = new StringBuilder().Append(StructureName).Append(": Attempt to: ").
+                Append(operation).Append(" | Result: ").
+                Append(response.ReasonPhrase).
+                Append(" - ").
+                Append(response.Status).ToString();
+
+            if (response.Status >= 200 && response.Status < 300)
+            {
+                TryLog(log);
+                return true;
+            }
+            TryLogError(log);
+            return false;
+        }
+
+
+
     }
+}
+
 }

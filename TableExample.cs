@@ -1,7 +1,7 @@
-﻿using Microsoft.WindowsAzure.Storage.Table;
+﻿using Microsoft.Azure.Cosmos.Table;
 using Rgd.AzureAbstractions.CloudStructures;
-using System;
 using System.Threading.Tasks;
+
 
 namespace Rgd.AzureAbstractions.Tests
 {
@@ -9,7 +9,9 @@ namespace Rgd.AzureAbstractions.Tests
     {
         static void Main(string[] args)
         {
-            new Tester().UsingAzureTable().GetAwaiter().GetResult();
+            
+           new Tester().UsingAzureTable().GetAwaiter().GetResult();
+
         }
 
         class Tester
