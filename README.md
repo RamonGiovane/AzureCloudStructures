@@ -5,7 +5,7 @@
  
  ### Insert data in tables
  ### Upload a blob to an Azure Storage Container
- ### Enqueue a Azure Queue
+ ### Enqueue a message to an Azure Queue
  
  
 # Example
