@@ -19,7 +19,7 @@ Compatible with: .NetCore 2.* projects.
 
 The following NuGet packages are necessary:
 - Azure.Storage.Blobs Version >= 12.4.4
-- Azure.Storage.Queues" Version >= 12.3.2
-- Microsoft.Azure.Cosmos.Table >= 1.0.7
-- Microsoft.Extensions.Logging.Abstractions >= 2.2.0
+- Azure.Storage.Queues Version >= 12.3.2
+- Microsoft.Azure.Cosmos.Table Version >= 1.0.7
+- Microsoft.Extensions.Logging.Abstractions Version >= 2.2.0
 
