@@ -15,11 +15,11 @@ Only 3 lines of code for inserting a blob to the storage:
 
  
 # Dependencies
-Compatible with: .NetCore 2.* projects.
+Compatible with: .NetCore ~ 2 projects.
 
 The following NuGet packages are necessary:
-- Azure.Storage.Blobs Version >= 12.4.4
-- Azure.Storage.Queues Version >= 12.3.2
-- Microsoft.Azure.Cosmos.Table Version >= 1.0.7
-- Microsoft.Extensions.Logging.Abstractions Version >= 2.2.0
+- Azure.Storage.Blobs Version ~ 12.4.4
+- Azure.Storage.Queues Version ~ 12.3.2
+- Microsoft.Azure.Cosmos.Table Version ~ 1.0.7
+- Microsoft.Extensions.Logging.Abstractions Version ~ 2.2.0
 
